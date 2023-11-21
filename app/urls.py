@@ -17,7 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+user_site_name = 'user_site_name'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('vpnservice.urls')),  # http://127.0.0.1:8000/
+    path('', include('vpnservice.urls')),
 ]
