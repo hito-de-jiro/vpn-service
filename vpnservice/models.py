@@ -1,8 +1,20 @@
 from django.db import models
 
 
+class UserModel(models.Model):
+    user_name = models.CharField(max_length=45, verbose_name='user_name')
+    user_mail = models.CharField(max_length=45, verbose_name='user_mail')
+
+    class Meta:
+        verbose_name = "user"
+        verbose_name_plural = "users"
+
+    def __str__(self):
+        return self.user_name
+
+
 class UserSiteModel(models.Model):
-    site_name = models.CharField(max_length=45, verbose_name='Name schema')
+    site_name = models.CharField(max_length=45, verbose_name='site_name')
     site_path = models.SlugField(max_length=45, verbose_name='site_path')
 
     class Meta:

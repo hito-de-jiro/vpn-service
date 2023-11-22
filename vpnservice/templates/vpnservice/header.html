@@ -1,0 +1,21 @@
+<header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light rounded">
+        <a class="navbar-brand" href="#"><h1>VPN-service</h1></a>
+        <div class="collapse navbar-collapse" id="navbar">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="{% url 'user_site_list' %}">User`s sites list<span class="sr-only"></span></a>
+                </li>
+            </ul>
+            <div class="inline my-3 my-md-0">
+                {% if request.user.is_authenticated %}
+                    <span class="mr-sm-2">Hello, {{ request.user.username }}!</span>
+                    <a href="{% url 'logout' %}" class="my-2 my-sm-0">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Login</a>
+                    <a href="{% url 'signup' %}">Signup</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+</header>

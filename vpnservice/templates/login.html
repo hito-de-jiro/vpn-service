@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}Log In{% endblock %}
+{% block title %}Login{% endblock %}
 {% block content %}
     <div class="row">
         <div class="col-md-auto w-50 mx-auto">
             <div class="card text-center bg-light mb-3 " style="max-width: 40rem;">
                 <div class="card-body">
-                    <h1 class="card-title">Log In</h1>
+                    <h1 class="card-title">Login</h1>
                     <form method="post">
                         {% csrf_token %}
                         {{ form.as_p }}
-                        <p><input type="submit" value="Log-in" class="btn btn-success"></p>
+                        <p><input type="submit" value="Login" class="btn btn-success"></p>
+                        <p><a href="{% url 'signup' %}">Dont have Account Create</a></p>
                     </form>
                 </div>
             </div>
