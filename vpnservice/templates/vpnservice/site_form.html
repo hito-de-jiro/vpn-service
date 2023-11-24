@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {% include 'vpnservice/header.html' %}
+    <form id="form-container" method="post">
+        {% csrf_token %}
+        {{ columns.management_form }}
+        <div>
+            <h2>Add new site info</h2>
+            {{ form.as_table }}
+        </div>
+        <div class="button-info ">
+            <button type="submit" class="btn btn-success">Add</button>
+        </div>
+{#        <h2>Schema columns</h2>#}
+{#        <div class="form-row">#}
+{#            <div class="form-group">#}
+{#                {% for cform in columns %}#}
+{#                    <div class="column-form">#}
+{#                        {{ cform.as_table }}#}
+{#                        <a href="#" class="columnmodel_set-0-delete_column text-danger delete_column"#}
+{#                           style="text-decoration: none">delete</a>#}
+{#                    </div>#}
+{#                {% endfor %}#}
+{#            </div>#}
+{#        </div>#}
+{#        <button id="add-form" type="button" class="btn btn-primary">Add column</button>#}
+    </form>
+
+{% endblock %}

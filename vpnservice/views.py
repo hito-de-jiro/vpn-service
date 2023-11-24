@@ -2,14 +2,14 @@ import re
 
 import requests
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.views.generic import ListView, CreateView, DeleteView
 
-from django.views.generic import ListView
-
-from .forms import LoginForm
+from .forms import LoginForm, AddSiteInfoFormSet
 from .models import UserSiteModel
 
 HEADERS = {
@@ -90,9 +90,52 @@ def repl_link(site, site_name):
     return res
 
 
-# Home page
-def index(request):
-    return render(request, 'index.html')
+class UserSiteListView(ListView):
+    model = UserSiteModel
+
+
+class UserSiteCreateView(LoginRequiredMixin, CreateView):
+    model = UserSiteModel
+    template_name = "vpnservice/site_form.html"
+    fields = [
+        'site_name',
+        'site_path',
+    ]
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+
+        if self.request.POST:
+            data['site_info'] = AddSiteInfoFormSet(self.request.POST)
+        else:
+            data['site_info'] = AddSiteInfoFormSet()
+
+        return data
+
+    def form_valid(self, parent_form):
+        context = self.get_context_data()
+        site_info_fs: AddSiteInfoFormSet = context['site_info']
+        new_parent = parent_form.save()
+
+        if site_info_fs.is_valid():
+            for instance in site_info_fs:
+                if instance in site_info_fs.deleted_forms:
+                    continue
+                site_info = instance.save(commit=False)
+                site_info.schema = new_parent
+                site_info.save()
+        else:
+            return self.form_invalid(parent_form)
+
+        return super().form_valid(parent_form)
+
+
+class SiteDeleteView(LoginRequiredMixin, DeleteView):
+    model = UserSiteModel
+    template_name = 'site_delete.html'
+
+    def get_success_url(self):
+        return reverse("home")
 
 
 # signup page
@@ -104,7 +147,7 @@ def user_signup(request):
             return redirect('login')
     else:
         form = UserCreationForm()
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'registration/signup.html', {'form': form})
 
 
 # login page
@@ -117,17 +160,13 @@ def user_login(request):
             user = authenticate(request, username=username, password=password)
             if user:
                 login(request, user)
-                return redirect('user_site_list')
+                return redirect('home')
     else:
         form = LoginForm()
-    return render(request, 'login.html', {'form': form})
+    return render(request, 'registration/login.html', {'form': form})
 
 
 # logout page
 def user_logout(request):
     logout(request)
     return redirect('login')
-
-
-class UserSiteListView(ListView):
-    model = UserSiteModel
