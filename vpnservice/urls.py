@@ -1,18 +1,17 @@
 from django.urls import path, re_path
-
 from .views import (
+    home,
+    RegisterView,
+
     UserSiteListView,
     UserSiteCreateView,
     SiteDeleteView,
-    user_login,
-    user_signup,
-    user_logout,
 )
 
 urlpatterns = [
-    path('', user_login, name='login'),
-    path('signup/', user_signup, name='signup'),
-    path('logout/', user_logout, name='logout'),
+    path('', home, name='users-home'),
+    path('register/', RegisterView.as_view(), name='users-register'),
+
     path('user-name-home/', UserSiteListView.as_view(), name='home'),
     path('add/', UserSiteCreateView.as_view(), name='add_site'),
     path('user-name-home/<int:pk>/delete', SiteDeleteView.as_view(), name='delete_site'),

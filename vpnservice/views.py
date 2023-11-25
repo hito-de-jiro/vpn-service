@@ -1,16 +1,19 @@
 import re
 
 import requests
+from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.views import View
 from django.views.generic import ListView, CreateView, DeleteView
 
-from .forms import LoginForm, AddSiteInfoFormSet
-from .models import UserSiteModel
+from .forms import LoginForm, AddSiteInfoFormSet, RegisterForm
+from .models import UserSiteModel, SiteInfoModel, UserInfoModel
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
@@ -130,6 +133,18 @@ class UserSiteCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(parent_form)
 
 
+# def add_user_info(request, pk):
+#     pass
+#
+#
+# def update_user_info(request, pk):
+#     parent_obj = get_object_or_404(UserInfoModel, pk=pk)
+#     if request.method == 'POST':
+#         pass
+#
+#
+# def site_info(request, pk):
+#     pass
 class SiteDeleteView(LoginRequiredMixin, DeleteView):
     model = UserSiteModel
     template_name = 'site_delete.html'
@@ -138,35 +153,45 @@ class SiteDeleteView(LoginRequiredMixin, DeleteView):
         return reverse("home")
 
 
-# signup page
-def user_signup(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+def home(request):
+    return render(request, 'vpnservice/home.html')
+
+
+class RegisterView(View):
+    form_class = RegisterForm
+    initial = {'key': 'value'}
+    template_name = 'registration/register.html'
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(initial=self.initial)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+
         if form.is_valid():
             form.save()
-            return redirect('login')
-    else:
-        form = UserCreationForm()
-    return render(request, 'registration/signup.html', {'form': form})
+
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Account created for {username}')
+
+            return redirect(to='/')
+
+        return render(request, self.template_name, {'form': form})
 
 
-# login page
-def user_login(request):
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user:
-                login(request, user)
-                return redirect('home')
-    else:
-        form = LoginForm()
-    return render(request, 'registration/login.html', {'form': form})
+class CustomLoginView(LoginView):
+    form_class = LoginForm
 
+    def form_valid(self, form):
+        remember_me = form.cleaned_data.get('remember_me')
 
-# logout page
-def user_logout(request):
-    logout(request)
-    return redirect('login')
+        if not remember_me:
+            # set session expiry to 0 seconds. So it will automatically close the session after the browser is closed.
+            self.request.session.set_expiry(0)
+
+            # Set session as modified to force data updates/cookie to be saved.
+            self.request.session.modified = True
+
+        # else browser session will be as long as the session cookie time "SESSION_COOKIE_AGE" defined in settings.py
+        return super(CustomLoginView, self).form_valid(form)
