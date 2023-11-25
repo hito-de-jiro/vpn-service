@@ -2,18 +2,16 @@ import re
 
 import requests
 from django.contrib import messages
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
-from django.views.generic import ListView, CreateView, DeleteView
+from django.views.generic import ListView, DeleteView
 
-from .forms import LoginForm, AddSiteInfoFormSet, RegisterForm
-from .models import UserSiteModel, SiteInfoModel, UserInfoModel
+from .forms import LoginForm, RegisterForm
+from .models import UserSiteModel
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
@@ -97,40 +95,41 @@ class UserSiteListView(ListView):
     model = UserSiteModel
 
 
-class UserSiteCreateView(LoginRequiredMixin, CreateView):
-    model = UserSiteModel
-    template_name = "vpnservice/site_form.html"
-    fields = [
-        'site_name',
-        'site_path',
-    ]
-
-    def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-
-        if self.request.POST:
-            data['site_info'] = AddSiteInfoFormSet(self.request.POST)
-        else:
-            data['site_info'] = AddSiteInfoFormSet()
-
-        return data
-
-    def form_valid(self, parent_form):
-        context = self.get_context_data()
-        site_info_fs: AddSiteInfoFormSet = context['site_info']
-        new_parent = parent_form.save()
-
-        if site_info_fs.is_valid():
-            for instance in site_info_fs:
-                if instance in site_info_fs.deleted_forms:
-                    continue
-                site_info = instance.save(commit=False)
-                site_info.schema = new_parent
-                site_info.save()
-        else:
-            return self.form_invalid(parent_form)
-
-        return super().form_valid(parent_form)
+#
+# class UserSiteCreateView(LoginRequiredMixin, CreateView):
+#     model = UserSiteModel
+#     template_name = "vpnservice/site_form.html"
+#     fields = [
+#         'site_name',
+#         'site_path',
+#     ]
+#
+#     def get_context_data(self, **kwargs):
+#         data = super().get_context_data(**kwargs)
+#
+#         if self.request.POST:
+#             data['site_info'] = AddSiteInfoFormSet(self.request.POST)
+#         else:
+#             data['site_info'] = AddSiteInfoFormSet()
+#
+#         return data
+#
+#     def form_valid(self, parent_form):
+#         context = self.get_context_data()
+#         site_info_fs: AddSiteInfoFormSet = context['site_info']
+#         new_parent = parent_form.save()
+#
+#         if site_info_fs.is_valid():
+#             for instance in site_info_fs:
+#                 if instance in site_info_fs.deleted_forms:
+#                     continue
+#                 site_info = instance.save(commit=False)
+#                 site_info.schema = new_parent
+#                 site_info.save()
+#         else:
+#             return self.form_invalid(parent_form)
+#
+#         return super().form_valid(parent_form)
 
 
 # def add_user_info(request, pk):
@@ -161,6 +160,14 @@ class RegisterView(View):
     form_class = RegisterForm
     initial = {'key': 'value'}
     template_name = 'registration/register.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # will redirect to the home page if a user tries to access the register page while logged in
+        if request.user.is_authenticated:
+            return redirect(to='/')
+
+        # else process dispatch as it otherwise normally would
+        return super(RegisterView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         form = self.form_class(initial=self.initial)

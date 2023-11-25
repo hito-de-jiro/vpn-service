@@ -123,3 +123,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = '/'
+
+# saving the session  for 30 days
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30

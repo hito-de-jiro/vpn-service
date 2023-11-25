@@ -1,9 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
-from django.forms import ModelForm, TextInput, inlineformset_factory, URLInput
+from django.forms import ModelForm, TextInput, URLInput
 
-from .models import UserInfoModel, UserSiteModel, SiteInfoModel
+from .models import UserSiteModel
 
 
 class RegisterForm(UserCreationForm):
@@ -67,27 +67,11 @@ class LoginForm(AuthenticationForm):
         fields = ['username', 'password', 'remember_me']
 
 
-class UserInfoForm(ModelForm):
-    class Meta:
-        model = UserInfoModel
-        fields = '__all__'
-        widgets = {
-            'user_name': TextInput(attrs={
-                'class': 'user_name',
-                'required': 'true',
-            }),
-            'user_mail': TextInput(attrs={
-                'class': 'form-control',
-                'autocomplete': 'off',
-                'required': 'true',
-            }),
-        }
-
-
 class UserSiteForm(ModelForm):
     class Meta:
         model = UserSiteModel
-        fields = '__all__'
+        fields = ['site_name', 'site_path']
+
         widgets = {
             'site_name': TextInput(attrs={
                 'class': 'site_name',
@@ -98,9 +82,3 @@ class UserSiteForm(ModelForm):
                 'required': 'true',
             }),
         }
-
-
-AddSiteInfoFormSet = inlineformset_factory(
-    UserInfoModel, UserSiteModel, form=UserInfoForm,
-    extra=1, can_delete=True, can_delete_extra=True
-)
