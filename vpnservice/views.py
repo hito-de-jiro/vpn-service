@@ -2,6 +2,7 @@ import re
 
 import requests
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
@@ -10,7 +11,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import ListView, DeleteView
 
-from .forms import LoginForm, RegisterForm
+from .forms import LoginForm, RegisterForm, UpdateUserForm
 from .models import UserSiteModel
 
 HEADERS = {
@@ -202,3 +203,19 @@ class CustomLoginView(LoginView):
 
         # else browser session will be as long as the session cookie time "SESSION_COOKIE_AGE" defined in settings.py
         return super(CustomLoginView, self).form_valid(form)
+
+
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        user_form = UpdateUserForm(request.POST, instance=request.user)
+
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, 'Your profile is updated successfully')
+            return redirect(to='users-profile')
+    else:
+        user_form = UpdateUserForm(instance=request.user)
+
+    return render(request, 'registration/profile.html', {'user_form': user_form})
+

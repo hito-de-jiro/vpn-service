@@ -9,7 +9,7 @@
             {% if request.user.is_authenticated %}
                 <ul class="nav justify-content-end">
                      <li class="nav-item">
-                        <a href="#Profile" class="nav-link" >Profile</a>
+                        <a href="{% url 'users-profile' %}" class="nav-link" >Profile</a>
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'logout' %}" class="nav-link" >Logout</a>
