@@ -3,19 +3,18 @@ import re
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from django.urls import reverse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import ListView, DeleteView
+from django.views.generic import ListView
 
-from .forms import LoginForm, RegisterForm, UpdateUserForm
+from .forms import LoginForm, RegisterForm, UpdateUserForm, UserSiteForm
 from .models import UserSiteModel
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                  '(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
 }
 
 
@@ -96,61 +95,25 @@ class UserSiteListView(ListView):
     model = UserSiteModel
 
 
-#
-# class UserSiteCreateView(LoginRequiredMixin, CreateView):
-#     model = UserSiteModel
-#     template_name = "vpnservice/site_form.html"
-#     fields = [
-#         'site_name',
-#         'site_path',
-#     ]
-#
-#     def get_context_data(self, **kwargs):
-#         data = super().get_context_data(**kwargs)
-#
-#         if self.request.POST:
-#             data['site_info'] = AddSiteInfoFormSet(self.request.POST)
-#         else:
-#             data['site_info'] = AddSiteInfoFormSet()
-#
-#         return data
-#
-#     def form_valid(self, parent_form):
-#         context = self.get_context_data()
-#         site_info_fs: AddSiteInfoFormSet = context['site_info']
-#         new_parent = parent_form.save()
-#
-#         if site_info_fs.is_valid():
-#             for instance in site_info_fs:
-#                 if instance in site_info_fs.deleted_forms:
-#                     continue
-#                 site_info = instance.save(commit=False)
-#                 site_info.schema = new_parent
-#                 site_info.save()
-#         else:
-#             return self.form_invalid(parent_form)
-#
-#         return super().form_valid(parent_form)
+@login_required
+def create_user_site(request):
+    context = {}
+    form = UserSiteForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        return redirect('home')
+
+    context['form'] = form
+    return render(request, 'vpnservice/site_form.html', context)
 
 
-# def add_user_info(request, pk):
-#     pass
-#
-#
-# def update_user_info(request, pk):
-#     parent_obj = get_object_or_404(UserInfoModel, pk=pk)
-#     if request.method == 'POST':
-#         pass
-#
-#
-# def site_info(request, pk):
-#     pass
-class SiteDeleteView(LoginRequiredMixin, DeleteView):
-    model = UserSiteModel
-    template_name = 'site_delete.html'
-
-    def get_success_url(self):
-        return reverse("home")
+@login_required
+def site_delete(request, pk, template_name='vpnservice/site_delete.html'):
+    book = get_object_or_404(UserSiteModel, pk=pk)
+    if request.method == 'POST':
+        book.delete()
+        return redirect('home')
+    return render(request, template_name, {'object': book})
 
 
 def home(request):
@@ -218,4 +181,3 @@ def profile(request):
         user_form = UpdateUserForm(instance=request.user)
 
     return render(request, 'registration/profile.html', {'user_form': user_form})
-

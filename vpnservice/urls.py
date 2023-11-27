@@ -9,8 +9,8 @@ from .views import (
     profile,
 
     UserSiteListView,
-    # UserSiteCreateView,
-    SiteDeleteView,
+    create_user_site,
+    site_delete,
 )
 
 urlpatterns = [
@@ -20,8 +20,10 @@ urlpatterns = [
                                            authentication_form=LoginForm), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
     path('profile/', profile, name='users-profile'),
+
     path('user-name-home/', UserSiteListView.as_view(), name='home'),
-    # path('add/', UserSiteCreateView.as_view(), name='add_site'),
-    path('user-name-home/<int:pk>/delete', SiteDeleteView.as_view(), name='delete_site'),
+    path('add/', create_user_site, name='add_site'),
+    path('user-name-home/<int:pk>/delete', site_delete, name='delete_site'),
+
     # re_path(r'(?P<user_path>/.*)', proxy_url, name='user_path'),
 ]
