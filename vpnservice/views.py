@@ -91,8 +91,25 @@ def repl_link(site, site_name):
     return res
 
 
-class UserSiteListView(ListView):
-    model = UserSiteModel
+@login_required
+def user_site_list(request, template_name='vpnservice/site_info.html'):
+    site_info = UserSiteModel.objects.all()
+    data = {'object_list': site_info}
+    print(111)
+    print()
+    print()
+    return render(request, template_name, data)
+
+
+
+@login_required
+def site_info_list(request, template_name='vpnservice/site_list.html'):
+    site_info = UserSiteModel.objects.all()
+    data = {'object_list': site_info}
+    print(111)
+    print()
+    print()
+    return render(request, template_name, data)
 
 
 @login_required
@@ -101,9 +118,10 @@ def create_user_site(request):
     form = UserSiteForm(request.POST or None)
     if form.is_valid():
         form.save()
-        return redirect('home')
+        return redirect('user-home')
 
     context['form'] = form
+
     return render(request, 'vpnservice/site_form.html', context)
 
 
@@ -112,7 +130,7 @@ def site_delete(request, pk, template_name='vpnservice/site_delete.html'):
     book = get_object_or_404(UserSiteModel, pk=pk)
     if request.method == 'POST':
         book.delete()
-        return redirect('home')
+        return redirect('user-home')
     return render(request, template_name, {'object': book})
 
 
