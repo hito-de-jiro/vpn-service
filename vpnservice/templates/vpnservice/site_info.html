@@ -28,16 +28,12 @@
                         <tr>
                             <th scope="row">{{ forloop.counter }}</th>
                             {% if request.user.is_authenticated %}
-                            <td>
-                                <a class="text-primary" href="#site_info_detail">{{ site.site_name }}</a>
-                                <-- press for info
-                            </td>
+                            <td>{{ site.site_name }}</td>
                             <td>{{ site.site_path }}</td>
                             <td>
                                 <div class="btn-group" role="group" aria-label="Basic example">
                                 <a type="button" class="btn btn-success" href="#go_to_site">Go to site</a>
-{#                                <a type="button" class="btn btn-info" href="#go_to_site_info">Info</a>#}
-                                <a href="{% url 'delete_site' site.id %}" type="button" class="btn btn-danger">
+                                <a href="{% url 'delete-site' site.id %}" type="button" class="btn btn-danger">
                                     <span class="text">  Delete</span></a>
                                 </div>
                             </td>
@@ -57,7 +53,7 @@
         </div>
         {% if request.user.is_authenticated %}
         <div class="col col-lg-2">
-            <a type="button" class="btn btn-success" href='{% url 'add_site' %}'>Add site</a>
+            <a type="button" class="btn btn-success" href='{% url 'add-site' %}'>Add site</a>
         </div>
         {% endif %}
     </div>

@@ -120,7 +120,7 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'user-home'
 LOGOUT_REDIRECT_URL = '/'
 
 # saving the session  for 30 days

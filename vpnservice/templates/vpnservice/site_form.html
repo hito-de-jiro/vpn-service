@@ -4,7 +4,19 @@
     {% include 'vpnservice/header.html' %}
     <form id="form-container" method="post">
         {% csrf_token %}
-        {{ columns.management_form }}
+        {% if form.errors %}
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <div id="form_errors">
+                    {% for key, value in form.errors.items %}
+                        <strong>{{ value }}</strong>
+                    {% endfor %}
+                </div>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endif %}
+{#        {{ columns.management_form }}#}
         <div>
             <h2>Add new site</h2>
             {{ form.as_table }}

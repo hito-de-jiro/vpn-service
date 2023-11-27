@@ -3,7 +3,12 @@
         <a class="navbar-brand" href="#"><h1>VPN-service</h1></a>
         <div class="collapse navbar-collapse" id="navbar">
             <ul class="navbar-nav mr-auto">
-
+                <li class="nav-item active">
+                    <a href="{% url 'user-home' %}" class="nav-link  text-info" >User`s sites</a>
+                </li>
+                <li class="nav-item active">
+                    <a href="{% url 'site-info' %}" class="nav-link  text-info" >Site`s info</a>
+                </li>
             </ul>
             <ul class="nav justify-content-end"></ul>
             {% if request.user.is_authenticated %}
