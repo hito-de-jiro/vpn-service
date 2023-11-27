@@ -11,7 +11,6 @@ from .views import (
     user_site_list,
     create_user_site,
     site_delete,
-    # SiteInfoListView,
     site_info_list,
 )
 

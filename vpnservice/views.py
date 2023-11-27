@@ -1,4 +1,5 @@
 import re
+from sys import getsizeof
 
 import requests
 from django.contrib import messages
@@ -7,7 +8,6 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import ListView
 
 from .forms import LoginForm, RegisterForm, UpdateUserForm, UserSiteForm
 from .models import UserSiteModel
@@ -60,16 +60,14 @@ def proxy_url(request, user_path=None):
         if res.status_code != 200:
             # Ignore errors
             print('Error', url[:100], res.status_code, res.text[:200])
-            print()
-            print()
         else:
             print('Fixed')
 
     # Replace urls in response
     response = res.text
 
-    def url_repl(matchobj):
-        return f'http://localhost:8000/user-site-name/{matchobj.group(1)}/'
+    def url_repl(match_obj):
+        return f'http://localhost:8000/user-site-name/{match_obj.group(1)}/'
 
     response = re.sub(rf"https://(\w*\.?{site_name})/", url_repl, response)
     response = re.sub(r"href=\"/(?!/)", f'href="http://localhost:8000/user-site-name/{site_name}/', response)
@@ -91,15 +89,22 @@ def repl_link(site, site_name):
     return res
 
 
+def count_data_traffic(data):
+    count_data = getsizeof(data)
+
+    return "%.2fKB" % (count_data / 1024)  # the value in KB is returned
+
+
+def count_num_follow_to_page():
+    # TODO document why this method is empty
+    pass
+
+
 @login_required
 def user_site_list(request, template_name='vpnservice/site_info.html'):
     site_info = UserSiteModel.objects.all()
     data = {'object_list': site_info}
-    print(111)
-    print()
-    print()
     return render(request, template_name, data)
-
 
 
 @login_required
