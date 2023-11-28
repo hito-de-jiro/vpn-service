@@ -16,20 +16,20 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
                   '(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
 }
+HOST = 'http://127.0.0.1:8000'
 
 
-def proxy_url(request, user_path=None):
+def proxy_url(request):
     full_path = request.get_full_path()
-
+    site_name = full_path.split('/')[1]
     # Create url for request
-    if full_path.startswith('/user-site-name'):
-        site_name = full_path.split('/')[2]
-        url_path = full_path.removeprefix('/user-site-name/')
+    if full_path.startswith('/'):
+        url_path = full_path.removeprefix(f'/{site_name}/')
         url = f'https://{url_path}'
     else:
         # Try load link from referer
         if 'referer' in request.headers:
-            site_name = request.headers.get('referer').split('user-site-name')[1].split('/')[1]
+            site_name = request.headers.get('referer').split(f'{site_name}')[1].split('/')[1]
             url_path = full_path.removeprefix('/')
             url = f'https://{site_name}/{url_path}'
         else:
@@ -38,12 +38,13 @@ def proxy_url(request, user_path=None):
     # Handle cors
     if request.headers.get('Sec-Fetch-Mode') == 'cors':
         fixed_headers = dict(request.headers.items())
+
         fixed_headers = {
-            k: v.replace('http://127.0.0.1:8000', f'https://{site_name}') if 'http://127.0.0.1:8000' in v else v
+            k: v.replace(HOST, f'https://{site_name}') if HOST in v else v
             for k, v in fixed_headers.items()
         }
         fixed_headers = {
-            k: v.replace('http://localhost:8000', f'https://{site_name}') if 'http://localhost:8000' in v else v
+            k: v.replace(HOST, f'https://{site_name}') if HOST in v else v
             for k, v in fixed_headers.items()
         }
     else:
@@ -67,11 +68,11 @@ def proxy_url(request, user_path=None):
     response = res.text
 
     def url_repl(match_obj):
-        return f'http://localhost:8000/user-site-name/{match_obj.group(1)}/'
+        return f'{HOST}{match_obj.group(1)}/'
 
     response = re.sub(rf"https://(\w*\.?{site_name})/", url_repl, response)
-    response = re.sub(r"href=\"/(?!/)", f'href="http://localhost:8000/user-site-name/{site_name}/', response)
-    response = re.sub(r"src=[\"\']/(?!/)", f'src="http://localhost:8000/user-site-name/{site_name}/', response)
+    response = re.sub(r"href=\"/(?!/)", f'href="{HOST}/{site_name}/', response)
+    response = re.sub(r"src=[\"\']/(?!/)", f'src="{HOST}/{site_name}/', response)
 
     # Add content type in response
     content_type = res.headers.get('Content-Type')
@@ -81,10 +82,9 @@ def proxy_url(request, user_path=None):
 
 
 def repl_link(site, site_name):
-    host = 'http://127.0.0.1:8000' + site_name
-    print(host)
+    url = 'http://127.0.0.1:8000' + site_name
     pattern = re.compile(f'href=\"https?:(//)(www.)?{site_name}', re.VERBOSE)
-    res = re.sub(pattern, host, site)
+    res = re.sub(pattern, url, site)
 
     return res
 
@@ -101,14 +101,14 @@ def count_num_follow_to_page():
 
 
 @login_required
-def user_site_list(request, template_name='vpnservice/site_info.html'):
+def user_site_list(request, template_name='vpnservice/site_list.html'):
     site_info = UserSiteModel.objects.all()
     data = {'object_list': site_info}
     return render(request, template_name, data)
 
 
 @login_required
-def site_info_list(request, template_name='vpnservice/site_list.html'):
+def site_info_list(request, template_name='vpnservice/site_info.html'):
     site_info = UserSiteModel.objects.all()
     data = {'object_list': site_info}
     print(111)

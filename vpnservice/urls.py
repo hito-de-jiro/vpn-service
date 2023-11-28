@@ -12,6 +12,8 @@ from .views import (
     create_user_site,
     site_delete,
     site_info_list,
+
+    proxy_url,
 )
 
 urlpatterns = [
@@ -22,10 +24,10 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
     path('profile/', profile, name='users-profile'),
 
-    path('user-name-home/', user_site_list, name='user-home'),
-    path('user-name-home/add/', create_user_site, name='add-site'),
-    path('user-name-home/<int:pk>/delete', site_delete, name='delete-site'),
-    path('user-name-home/site-info', site_info_list, name='site-info'),
+    path('home/', user_site_list, name='user-home'),
+    path('home/add/', create_user_site, name='add-site'),
+    path('home/<int:pk>/delete', site_delete, name='delete-site'),
+    path('home/site-info', site_info_list, name='site-info'),
 
-    # re_path(r'(?P<user_path>/.*)', proxy_url, name='user_path'),
+    re_path(r'[^\s]+[\w]', proxy_url, name='proxy_url'),
 ]
