@@ -22,7 +22,7 @@
                         <th scope="col">#</th>
                         <th scope="col">Site name</th>
                         <th scope="col">Data sent</th>
-                        <th scope="col">Data received</th>
+                        <th scope="col">Data loaded</th>
                         <th scope="col">Number visits</th>
                     </tr>
                     </thead>
@@ -32,9 +32,9 @@
                             <th scope="row">{{ forloop.counter }}</th>
                             {% if request.user.is_authenticated %}
                                 <td>{{ site.site_name }}</td>
-                                <td>{{ site.data_sent }}</td>
-                                <td>{{ site.data_loaded }}</td>
-                                <td>number visits=?</td>
+                                <td>{{ site.data_sent|filesizeformat }}</td>
+                                <td>{{ site.data_loaded|filesizeformat }}</td>
+                                <td>{{ site.number_visits }}</td>
                             {% else %}
                                 <td>No data.</td>
                                 <td>No data.</td>
