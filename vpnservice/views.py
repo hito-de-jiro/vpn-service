@@ -5,7 +5,6 @@ import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.db.models import F
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -20,9 +19,12 @@ HEADERS = {
 HOST = 'http://127.0.0.1:8000'
 
 
-def proxy_url(request, pk=14):
-    number_visits = 0
+def proxy_url(request):
     full_path = request.get_full_path()
+    # pk = int(full_path.split('/')[-1])
+    pk = 18
+
+    full_path = full_path.removesuffix(f'{pk}')
     site_name = full_path.split('/')[1]
     site_name, url = create_request(full_path, request, site_name)
     fixed_headers = handle_cors(request, site_name)
@@ -119,12 +121,6 @@ def count_data_traffic(data) -> float:
     count_data = getsizeof(data)
 
     return count_data  # the value in KB is returned
-    # return float("%.2f" % (count_data / 1024))   # the value in KB is returned
-
-
-def count_num_follow_to_page():
-    # TODO document why this method is empty
-    pass
 
 
 @login_required
