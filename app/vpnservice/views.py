@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 
 from .forms import LoginForm, RegisterForm, UpdateUserForm, UserSiteForm
-from .models import UserSiteModel
+from .models import UserSiteModel, SiteInfoModel
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -21,23 +21,19 @@ HOST = 'http://127.0.0.1:8000'
 
 def proxy_url(request):
     full_path = request.get_full_path()
-    # pk = int(full_path.split('/')[-1])
-    pk = 18
-
-    full_path = full_path.removesuffix(f'{pk}')
     site_name = full_path.split('/')[1]
+
     site_name, url = create_request(full_path, request, site_name)
     fixed_headers = handle_cors(request, site_name)
     # Do request
     res = requests.get(url, headers=fixed_headers, cookies=request.COOKIES)
     # Add data sent to db
-    user_site = UserSiteModel(id=pk)
-    old_data_sent = UserSiteModel.objects.get(id=pk).data_sent
-    if user_site.data_sent is None:
-        user_site.data_sent = count_data_traffic(request)
-    else:
-        user_site.data_sent = count_data_traffic(request) + old_data_sent
-    # Retry if error
+    parent_object = get_object_or_404(UserSiteModel, site_name=site_name)
+    site_info = SiteInfoModel()
+    site_info.user_site = parent_object
+    site_info.data_loaded = count_data_traffic(request)
+
+    print()
     res = retry_error(request, res, url)
     # Replace urls in response
     response = res.text
@@ -49,17 +45,11 @@ def proxy_url(request):
     # Add content type in response
     content_type = res.headers.get('Content-Type')
     # Add data load to db
-    old_data_loaded = UserSiteModel.objects.get(id=pk).data_loaded
-    if old_data_loaded is None:
-        user_site.data_loaded = count_data_traffic(response)
-    else:
-        user_site.data_loaded = count_data_traffic(response) + old_data_loaded
-    old_number_visits = UserSiteModel.objects.get(id=pk).number_visits
+    site_info.data_sent = count_data_traffic(response)
+    # Count site`s visits
+    site_info.number_visits += 1
 
-    user_site.number_visits = old_number_visits + 1
-
-    user_site.save(update_fields=['data_sent', 'data_loaded', 'number_visits'])
-
+    site_info.save()
     # Return response
     return HttpResponse(response, content_type=content_type)
 
@@ -74,7 +64,7 @@ def correct_response(response, site_name, url_repl):
 
 def create_request(full_path, request, site_name):
     # Create url for request
-    if full_path.startswith('/'):
+    if full_path.startswith(f'/{site_name}'):
         url_path = full_path.removeprefix(f'/{site_name}/')
         url = f'https://{url_path}'
     else:
@@ -132,7 +122,8 @@ def user_site_list(request, template_name='vpnservice/site_list.html'):
 
 @login_required
 def site_info_list(request, template_name='vpnservice/site_info.html'):
-    site_info = UserSiteModel.objects.all()
+    site_info = SiteInfoModel.objects.all()
+
     data = {'object_list': site_info}
 
     return render(request, template_name, data)

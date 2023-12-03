@@ -31,7 +31,7 @@
                         <tr>
                             <th scope="row">{{ forloop.counter }}</th>
                             {% if request.user.is_authenticated %}
-                                <td>{{ site.site_name }}</td>
+                                <td>{{ site.user_site }}</td>
                                 <td>{{ site.data_sent|filesizeformat }}</td>
                                 <td>{{ site.data_loaded|filesizeformat }}</td>
                                 <td>{{ site.number_visits }}</td>

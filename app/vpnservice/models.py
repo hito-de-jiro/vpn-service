@@ -23,5 +23,3 @@ class SiteInfoModel(models.Model):
         verbose_name = "site_info"
         verbose_name_plural = "site_info"
 
-    def __str__(self):
-        return self.user_site.verbose_name
