@@ -28,11 +28,11 @@ git clone https://github.com/hito-de-jiro/vpn-service
     ```
 4. Apply Django migrations:
     ```shell
-    docker compose run --rm app python manage.py migrate
+    docker compose run --rm web python manage.py migrate
     ```
 5. Populate the database with example data and create the admin user:
     ```shell
-    docker compose run --rm app python manage.py createsuperuser
+    docker compose run --rm web python manage.py createsuperuser
     ```
 6. Run the application:
     ```shell
