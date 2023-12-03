@@ -1,0 +1,17 @@
+.container_form {
+    padding-top: 10em;
+}
+
+.body {
+    background: red;
+}
+
+.add_column {
+    border: 2px solid #00A78E;
+}
+
+
+.button #add-form {
+    border: #721c24;
+}
+

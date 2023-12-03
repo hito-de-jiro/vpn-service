@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 
 from .forms import LoginForm, RegisterForm, UpdateUserForm, UserSiteForm
-from .models import UserSiteModel
+from .models import UserSiteModel, SiteInfoModel
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -22,8 +22,49 @@ HOST = 'http://127.0.0.1:8000'
 def proxy_url(request):
     full_path = request.get_full_path()
     site_name = full_path.split('/')[1]
+
+    site_name, url = create_request(full_path, request, site_name)
+    fixed_headers = handle_cors(request, site_name)
+    # Do request
+    res = requests.get(url, headers=fixed_headers, cookies=request.COOKIES)
+    # Add data sent to db
+    parent_object = get_object_or_404(UserSiteModel, site_name=site_name)
+    site_info = SiteInfoModel()
+    site_info.user_site = parent_object
+    site_info.data_loaded = count_data_traffic(request)
+
+    print()
+    res = retry_error(request, res, url)
+    # Replace urls in response
+    response = res.text
+
+    def url_repl(match_obj):
+        return f'{HOST}{match_obj.group(1)}/'
+
+    response = correct_response(response, site_name, url_repl)
+    # Add content type in response
+    content_type = res.headers.get('Content-Type')
+    # Add data load to db
+    site_info.data_sent = count_data_traffic(response)
+    # Count site`s visits
+    site_info.number_visits += 1
+
+    site_info.save()
+    # Return response
+    return HttpResponse(response, content_type=content_type)
+
+
+def correct_response(response, site_name, url_repl):
+    # correct URLs in response
+    response = re.sub(rf"https://(\w*\.?{site_name})/", url_repl, response)
+    response = re.sub(r"href=\"/(?!/)", f'href="{HOST}/{site_name}/', response)
+    response = re.sub(r"src=[\"\']/(?!/)", f'src="{HOST}/{site_name}/', response)
+    return response
+
+
+def create_request(full_path, request, site_name):
     # Create url for request
-    if full_path.startswith('/'):
+    if full_path.startswith(f'/{site_name}'):
         url_path = full_path.removeprefix(f'/{site_name}/')
         url = f'https://{url_path}'
     else:
@@ -34,25 +75,10 @@ def proxy_url(request):
             url = f'https://{site_name}/{url_path}'
         else:
             raise ValueError(f"Invalid path {full_path}")
+    return site_name, url
 
-    # Handle cors
-    if request.headers.get('Sec-Fetch-Mode') == 'cors':
-        fixed_headers = dict(request.headers.items())
 
-        fixed_headers = {
-            k: v.replace(HOST, f'https://{site_name}') if HOST in v else v
-            for k, v in fixed_headers.items()
-        }
-        fixed_headers = {
-            k: v.replace(HOST, f'https://{site_name}') if HOST in v else v
-            for k, v in fixed_headers.items()
-        }
-    else:
-        fixed_headers = HEADERS
-
-    # Do request
-    res = requests.get(url, headers=fixed_headers, cookies=request.COOKIES)
-
+def retry_error(request, res, url):
     # Retry if error
     if res.status_code != 200:
         print(url[:100], res.status_code, res.text[:200])
@@ -63,41 +89,28 @@ def proxy_url(request):
             print('Error', url[:100], res.status_code, res.text[:200])
         else:
             print('Fixed')
-
-    # Replace urls in response
-    response = res.text
-
-    def url_repl(match_obj):
-        return f'{HOST}{match_obj.group(1)}/'
-
-    response = re.sub(rf"https://(\w*\.?{site_name})/", url_repl, response)
-    response = re.sub(r"href=\"/(?!/)", f'href="{HOST}/{site_name}/', response)
-    response = re.sub(r"src=[\"\']/(?!/)", f'src="{HOST}/{site_name}/', response)
-
-    # Add content type in response
-    content_type = res.headers.get('Content-Type')
-
-    # Return response
-    return HttpResponse(response, content_type=content_type)
-
-
-def repl_link(site, site_name):
-    url = 'http://127.0.0.1:8000' + site_name
-    pattern = re.compile(f'href=\"https?:(//)(www.)?{site_name}', re.VERBOSE)
-    res = re.sub(pattern, url, site)
-
     return res
 
 
-def count_data_traffic(data):
+def handle_cors(request, site_name):
+    # Handle cors
+    if request.headers.get('Sec-Fetch-Mode') == 'cors':
+        fixed_headers = dict(request.headers.items())
+
+        fixed_headers = {
+            k: v.replace(HOST, f'https://{site_name}') if HOST in v else v
+            for k, v in fixed_headers.items()
+        }
+
+    else:
+        fixed_headers = HEADERS
+    return fixed_headers
+
+
+def count_data_traffic(data) -> float:
     count_data = getsizeof(data)
 
-    return "%.2fKB" % (count_data / 1024)  # the value in KB is returned
-
-
-def count_num_follow_to_page():
-    # TODO document why this method is empty
-    pass
+    return count_data  # the value in KB is returned
 
 
 @login_required
@@ -109,11 +122,10 @@ def user_site_list(request, template_name='vpnservice/site_list.html'):
 
 @login_required
 def site_info_list(request, template_name='vpnservice/site_info.html'):
-    site_info = UserSiteModel.objects.all()
+    site_info = SiteInfoModel.objects.all()
+
     data = {'object_list': site_info}
-    print(111)
-    print()
-    print()
+
     return render(request, template_name, data)
 
 

@@ -1,15 +1,17 @@
-{% extends "base.html" %}
-{%  load vpnservice_filters %}
+{% extends 'base.html' %}
+{% block title %}Site info{% endblock %}
 {% block content %}
     {% include 'vpnservice/header.html' %}
+
     <div class="container my-4">
         <div class="row">
             <div class="col">
-                <h2>User`s sites</h2>
+                <h2>Site`s info</h2>
             </div>
             <div class="col-md-auto"></div>
         </div>
     </div>
+
     <div class="table-container">
         <div class="bd-example-snippet bd-code-snippet">
             <div class="bd-example">
@@ -19,8 +21,9 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">Site name</th>
-                        <th scope="col">Site path</th>
-                        <th scope="col">Actions</th>
+                        <th scope="col">Data sent</th>
+                        <th scope="col">Data loaded</th>
+                        <th scope="col">Number visits</th>
                     </tr>
                     </thead>
                     {% for site in object_list %}
@@ -28,33 +31,23 @@
                         <tr>
                             <th scope="row">{{ forloop.counter }}</th>
                             {% if request.user.is_authenticated %}
-                                <td>{{ site.site_name }}</td>
-                                <td>{{ site.site_path }}</td>
-                                <td>
-                                    <div class="btn-group" role="group" aria-label="Basic example">
-                                        <a type="button" class="btn btn-success"
-                                           href="http://127.0.0.1:8000/{{ site.site_name }}/{{ site.site_path|url_repl }}">Go to site</a>
-                                        <a href="{% url 'delete-site' site.id %}" type="button" class="btn btn-danger">
-                                            <span class="text">  Delete</span></a>
-                                    </div>
-                                </td>
+                                <td>{{ site.user_site }}</td>
+                                <td>{{ site.data_sent|filesizeformat }}</td>
+                                <td>{{ site.data_loaded|filesizeformat }}</td>
+                                <td>{{ site.number_visits }}</td>
                             {% else %}
+                                <td>No data.</td>
                                 <td>No data.</td>
                                 <td>No data.</td>
                                 <td>No data.</td>
                             {% endif %}
                         </tr>
+
                         {% empty %}
                         </tbody>
                     {% endfor %}
                 </table>
             </div>
         </div>
-        {% if request.user.is_authenticated %}
-            <div class="col col-lg-2">
-                <a type="button" class="btn btn-success" href='{% url 'add-site' %}'>Add site</a>
-            </div>
-        {% endif %}
     </div>
-
 {% endblock %}

@@ -7,8 +7,9 @@ register = template.Library()
 
 @register.filter(name='url_repl')
 def url_repl(value):
-    value = re.sub(r"https?://((www.)?\.?)", '', value)
-
+    value = re.sub(r"https?://((www.)?)", '', value)
+    if value.endswith('/'):
+        return value.removesuffix('/')
     return value
 
 
