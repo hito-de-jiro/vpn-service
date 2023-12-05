@@ -5,6 +5,7 @@ import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -115,18 +116,32 @@ def count_data_traffic(data) -> float:
 
 @login_required
 def user_site_list(request, template_name='vpnservice/site_list.html'):
-    site_info = UserSiteModel.objects.all()
-    data = {'object_list': site_info}
-    return render(request, template_name, data)
+    user_sites = UserSiteModel.objects.all()
+    context = {
+        'object_list': user_sites
+    }
+    return render(request, template_name, context)
 
 
 @login_required
 def site_info_list(request, template_name='vpnservice/site_info.html'):
-    site_info = SiteInfoModel.objects.all()
+    object_list = []
+    site_info = SiteInfoModel.objects.all().values()
+    user_sites = UserSiteModel.objects.all().values()
+    for user_site in user_sites:
+        data = {}
+        site_id = user_site['id']
+        data['site_name'] = user_site['site_name']
+        data['data_sent'] = site_info.filter(user_site_id=site_id).aggregate(data_sent=Sum("data_sent")),
+        data['data_loaded'] = site_info.filter(user_site=site_id).aggregate(data_loaded=Sum("data_loaded")),
+        data['number_visits'] = site_info.filter(user_site=site_id).aggregate(number_visits=Sum("number_visits")),
+        object_list.append(data)
 
-    data = {'object_list': site_info}
+    context = {
+        'object_list': object_list
+    }
 
-    return render(request, template_name, data)
+    return render(request, template_name, context)
 
 
 @login_required
