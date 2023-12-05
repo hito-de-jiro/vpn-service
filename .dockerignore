@@ -31,4 +31,4 @@ media
 
 # Virtualenv
 venv
-app/.env
+.env

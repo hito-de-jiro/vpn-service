@@ -34,7 +34,6 @@ def proxy_url(request):
     site_info.user_site = parent_object
     site_info.data_loaded = count_data_traffic(request)
 
-    print()
     res = retry_error(request, res, url)
     # Replace urls in response
     response = res.text
