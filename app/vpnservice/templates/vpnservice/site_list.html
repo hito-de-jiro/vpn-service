@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{%  load vpnservice_filters %}
+{% load vpnservice_filters %}
 {% block content %}
     {% include 'vpnservice/header.html' %}
     <div class="container my-4">
@@ -33,7 +33,10 @@
                                 <td>
                                     <div class="btn-group" role="group" aria-label="Basic example">
                                         <a type="button" class="btn btn-success"
-                                           href="http://127.0.0.1:8000/{{ site.site_name }}/{{ site.site_path|url_repl }}">Go to site</a>
+                                           href="http://127.0.0.1:8000/{{ site.site_name }}/{{ site.site_path|url_repl }}">Go
+                                            to site</a>
+{#                                        <a type="button" class="btn btn-success" href="{% url 'proxy_url' site_name=site.site_name site_url=site.site_path|url_repl %}">Go to site</a>#}
+
                                         <a href="{% url 'delete-site' site.id %}" type="button" class="btn btn-danger">
                                             <span class="text">  Delete</span></a>
                                     </div>
