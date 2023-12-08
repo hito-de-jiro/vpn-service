@@ -29,5 +29,6 @@ urlpatterns = [
     path('home/<int:pk>/delete', site_delete, name='delete-site'),
     path('home/site-info', site_info_list, name='site-info'),
 
-    re_path(r'[^\s]+[\w]/', proxy_url, name='proxy_url'),
+    re_path(r'.*/', proxy_url, name='proxy_url'),
+    # re_path('^([a-zA-Z-]+/)([a-zA-Z]+.?[a-zA-Z]+/?)$', proxy_url, name='proxy_url'),
 ]
