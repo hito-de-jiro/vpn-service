@@ -15,5 +15,3 @@ RUN python -m pip install --upgrade pip
 RUN pip install -r /temp/requirements.txt
 RUN adduser --disabled-password service-user
 USER service-user
-
-

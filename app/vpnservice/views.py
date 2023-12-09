@@ -18,23 +18,22 @@ HEADERS = {
                   '(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
 }
 HOST = 'http://127.0.0.1:8000'
+PROXY_PREFIX = 'vpn-service'
 
 
 def proxy_url(request):
     full_path = request.get_full_path()
-    print()
-    # http://127.0.0.1:8000/user-site-name/ifconfig.me/
-    user_site_name = 'ifconfigme'  # http://127.0.0.1:8000/ifconfigme/ifconfig.me/
 
     # Create url for request
-    if full_path.startswith('/user-site-name'):
-        site_name = full_path.split('/')[2]
-        url_path = full_path.removeprefix('/user-site-name/')
+    if full_path.startswith(f'/{PROXY_PREFIX}'):
+
+        site_name, url_path = full_path.removeprefix(f'/{PROXY_PREFIX}/').split('/', maxsplit=1)
+        site_domain = url_path.split('/', maxsplit=1)[0]
         url = f'https://{url_path}'
     else:
         # Try load link from referer
         if 'referer' in request.headers:
-            site_name = request.headers.get('referer').split('user-site-name')[1]  # .split('/')[1]
+            site_name = request.headers.get('referer').split(PROXY_PREFIX)[2]  # .split('/')[1]
             url_path = full_path.removeprefix('/')
             url = f'https://{site_name}/{url_path}'
         else:
@@ -44,11 +43,15 @@ def proxy_url(request):
     if request.headers.get('Sec-Fetch-Mode') == 'cors':
         fixed_headers = dict(request.headers.items())
         fixed_headers = {
-            k: v.replace('http://127.0.0.1:8000', f'https://{site_name}') if 'http://127.0.0.1:8000' in v else v
+            k: v.replace('http://127.0.0.1:8000', f'https://{site_domain}') if 'http://127.0.0.1:8000' in v else v
             for k, v in fixed_headers.items()
         }
         fixed_headers = {
-            k: v.replace('http://localhost:8000', f'https://{site_name}') if 'http://localhost:8000' in v else v
+            k: v.replace('http://localhost:8000', f'https://{site_domain}') if 'http://localhost:8000' in v else v
+            for k, v in fixed_headers.items()
+        }
+        fixed_headers = {
+            k: site_domain if 'localhost:8000' == v else v
             for k, v in fixed_headers.items()
         }
     else:
@@ -58,10 +61,10 @@ def proxy_url(request):
     res = requests.get(url, headers=fixed_headers, cookies=request.COOKIES)
 
     # Add data sent to db
-    # parent_object = get_object_or_404(UserSiteModel, site_name=site_name)
-    # site_info = SiteInfoModel()
-    # site_info.user_site = parent_object
-    # site_info.data_loaded = count_data_traffic(request)
+    parent_object = get_object_or_404(UserSiteModel, site_name=site_name)
+    site_info = SiteInfoModel()
+    site_info.user_site = parent_object
+    site_info.data_loaded = count_data_traffic(request)
 
     # Retry if error
     if res.status_code != 200:
@@ -71,8 +74,6 @@ def proxy_url(request):
         if res.status_code != 200:
             # Ignore errors
             print('Error', url[:100], res.status_code, res.text[:200])
-            print()
-            print()
         else:
             print('Fixed')
 
@@ -80,21 +81,22 @@ def proxy_url(request):
     response = res.text
 
     def url_repl(matchobj):
-        return f'http://localhost:8000/user-site-name/{matchobj.group(1)}/'
+        return f'http://localhost:8000/{PROXY_PREFIX}/{site_name}/{matchobj.group(1)}/'
 
-    response = re.sub(rf"https://(\w*\.?{site_name})/", url_repl, response)
-    response = re.sub(r"href=\"/(?!/)", f'href="http://localhost:8000/user-site-name/{site_name}/', response)
-    response = re.sub(r"src=[\"\']/(?!/)", f'src="http://localhost:8000/user-site-name/{site_name}/', response)
+    response = re.sub(rf"https?://(\w*\.?{site_domain})/", url_repl, response)
+    response = re.sub(r"href=\"\.?/(?!/)", f'href="http://localhost:8000/{PROXY_PREFIX}/{site_name}/{site_domain}/',
+                      response)
+    response = re.sub(r"src=[\"\']/(?!/)", f'src="http://localhost:8000/{PROXY_PREFIX}/{site_name}/{site_domain}/',
+                      response)  # TODO: fix
 
     # Add content type in response
     content_type = res.headers.get('Content-Type')
-
     # Add data load to db
-    # site_info.data_sent = count_data_traffic(response)
+    site_info.data_sent = count_data_traffic(response)
     # Count site`s visits
-    # site_info.number_visits += 1
-
-    # site_info.save()
+    site_info.number_visits += 1
+    # Save info
+    site_info.save()
 
     # Return response
     return HttpResponse(response, content_type=content_type)
@@ -103,7 +105,7 @@ def proxy_url(request):
 def count_data_traffic(data) -> float:
     count_data = getsizeof(data)
 
-    return count_data  # the value in KB is returned
+    return count_data
 
 
 @login_required
