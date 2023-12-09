@@ -31,10 +31,20 @@
                         <tr>
                             <th scope="row">{{ forloop.counter }}</th>
                             {% if request.user.is_authenticated %}
-                                <td>{{ site.user_site }}</td>
-                                <td>{{ site.data_sent|filesizeformat }}</td>
-                                <td>{{ site.data_loaded|filesizeformat }}</td>
-                                <td>{{ site.number_visits }}</td>
+                                <td>{{ site.site_name }}</td>
+                                {% for sent in site.data_sent %}
+                                    <td>{{ sent.data_sent|filesizeformat }}</td>
+                                {% endfor %}
+                                {% for loaded in site.data_loaded %}
+                                    <td>{{ loaded.data_loaded|filesizeformat }}</td>
+                                {% endfor %}
+                                {% for visits in site.number_visits %}
+                                    {% if visits.number_visits == None %}
+                                    <td>0</td>
+                                    {% else %}
+                                        <td>{{ visits.number_visits }}</td>
+                                    {% endif %}
+                                {% endfor %}
                             {% else %}
                                 <td>No data.</td>
                                 <td>No data.</td>
