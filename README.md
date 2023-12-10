@@ -26,23 +26,29 @@ git clone https://github.com/hito-de-jiro/vpn-service
     ```shell
     docker compose build
     ```
-4. Apply Django migrations:
-    ```shell
+4. Make migrations ...
+   ```shell
+    docker compose run --rm web python manage.py makemigrations
+    ```
+5. ... and migrate.
+   ```shell
     docker compose run --rm web python manage.py migrate
     ```
-5. Populate the database with example data and create the admin user:
+6. Populate the database with example data and create the admin user:
     ```shell
     docker compose run --rm web python manage.py createsuperuser
     ```
    * Note that --createsuperuser argument creates an admin account for admin@example.com with the password set to admin
-6. 
+
 7. Run the application:
     ```shell
     docker compose up
     ```
-7. Stop the application:
+8. Stop the application:
     ```shell
     docker compose stop
     ```
+   
+The service is available at the [link](http://127.0.0.1:8000/).
 
     
