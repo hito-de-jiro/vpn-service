@@ -9,7 +9,7 @@ services:
     volumes:
       - ./app:/app
     env_file:
-      - app/.env
+      - .env
 
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
