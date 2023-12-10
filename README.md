@@ -34,7 +34,9 @@ git clone https://github.com/hito-de-jiro/vpn-service
     ```shell
     docker compose run --rm web python manage.py createsuperuser
     ```
-6. Run the application:
+   * Note that --createsuperuser argument creates an admin account for admin@example.com with the password set to admin
+6. 
+7. Run the application:
     ```shell
     docker compose up
     ```
